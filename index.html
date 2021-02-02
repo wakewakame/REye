@@ -2,14 +2,38 @@
 	<head>
 		<meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
 		<script type="module">
-			import init, { add } from './pkg/reye.js';
+			import init, { RootComponent } from './pkg/reye.js';
 			document.addEventListener("DOMContentLoaded", async () => {
+				// wasmの初期化
 				await init();
-				const result = add(1, 2);
-				console.log(`1 + 2 = ${result}`);
+
+				// DOMの取得
+				const canvas_div= document.getElementById("canvas_div");
+				const canvas = document.getElementById("canvas");
+
+				const root_component = RootComponent.new();
+				root_component.add();
+				console.log(root_component.get());
+
+				// リサイズイベントにあわせてcanvasをリサイズ
+				const resize = () => {
+					const width = window.innerWidth;
+					const height = window.innerHeight;
+					const ratio = window.devicePixelRatio;
+					canvas_div.style.width = canvas.style.width = `${width}px`;
+					canvas_div.style.height = canvas.style.height = `${height}px`;
+					canvas.width = width * ratio;
+					canvas.height = height * ratio;
+				};
+				window.addEventListener("resize", resize);
+				resize();
 			});
 		</script>
 	</head>
-	<body>
+	<body style="margin: 0px;">
+		<div style="overflow: hidden;" id="canvas_div">
+			<canvas id="canvas">
+			</canvas>
+		</div>
 	</body>
 </html>
