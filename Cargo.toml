@@ -1,0 +1,29 @@
+[package]
+name = "reye"
+version = "0.1.0"
+authors = ["REye"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wasm-bindgen = "0.2.70"
+
+[profile.release]
+# Releaseビルド時に最適化を行う
+lto = true
+
+[target."cfg(debug_assertions)".dependencies]
+# Debugビルド時にpanicの詳細をconsole.errorに表示する
+console_error_panic_hook = "0.1.5"
+
+[dependencies.web-sys]
+version = "0.3.4"
+features = [
+  'Document',
+  'Element',
+  'HtmlElement',
+  'Node',
+  'Window',
+]

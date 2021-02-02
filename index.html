@@ -1,0 +1,15 @@
+<html>
+	<head>
+		<meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
+		<script type="module">
+			import init, { add } from './pkg/reye.js';
+			document.addEventListener("DOMContentLoaded", async () => {
+				await init();
+				const result = add(1, 2);
+				console.log(`1 + 2 = ${result}`);
+			});
+		</script>
+	</head>
+	<body>
+	</body>
+</html>
