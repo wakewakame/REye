@@ -28,4 +28,5 @@ features = [
   'CanvasRenderingContext2d',
   'Event',
   'MouseEvent',
+  'KeyboardEvent',
 ]

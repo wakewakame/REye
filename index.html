@@ -46,13 +46,23 @@
 				window.requestAnimationFrame(loop);
 
 				// 一部のイベントをRootComponentに転送
-				canvas.addEventListener("mousemove", e => { root_component.dispatch_event(e); });
+				canvas.addEventListener("mouseup"  , e => { root_component.mouse(e); });
+				canvas.addEventListener("mousedown", e => { root_component.mouse(e); });
+				canvas.addEventListener("mousemove", e => { root_component.mouse(e); });
+				canvas.addEventListener("keyup"    , e => { root_component.keyboard(e); });
+				canvas.addEventListener("keydown"  , e => { root_component.keyboard(e); });
+				canvas.addEventListener("keypress" , e => { root_component.keyboard(e); });
+
+				// その他マウスの挙動設定
+				canvas.addEventListener("pointerdown", e => { canvas.setPointerCapture(e.pointerId); });
+				canvas.addEventListener("pointerup"  , e => { canvas.releasePointerCapture(e.pointerId); });
+				canvas.oncontextmenu = () => { return false; };
 			});
 		</script>
 	</head>
 	<body style="margin: 0px;">
 		<div style="overflow: hidden;" id="canvas_div">
-			<canvas id="canvas">
+			<canvas id="canvas" tabindex="-1">
 			</canvas>
 		</div>
 	</body>

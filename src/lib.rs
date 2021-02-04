@@ -68,17 +68,20 @@ impl RootComponent {
         self.width = width;
         self.height = height;
     }
-    pub fn dispatch_event(&mut self, event: js_sys::Object) -> Result<(), JsValue> {
+    pub fn mouse(&mut self, event: js_sys::Object) -> Result<(), JsValue> {
         // 引数の型チェック
-        if !event.has_type::<web_sys::Event>() {
-			return Err(JsValue::from_str("the argument value is not instance of Event"));
+        if !event.has_type::<web_sys::MouseEvent>() {
+			return Err(JsValue::from_str("the argument value is not instance of MouseEvent"));
         }
-
-        if let Ok(e) = event.dyn_into::<web_sys::MouseEvent>() { self.mouse(e); }
-
+        self.mouse.apply_event(event.dyn_into::<web_sys::MouseEvent>()?);
         Ok(())
     }
-    fn mouse(&mut self, e: web_sys::MouseEvent) {
-        self.mouse.apply_event(e);
+    pub fn keyboard(&mut self, event: js_sys::Object) -> Result<(), JsValue> {
+        // 引数の型チェック
+        if !event.has_type::<web_sys::KeyboardEvent>() {
+			return Err(JsValue::from_str("the argument value is not instance of KeyboardEvent"));
+        }
+        log!("{:?}", event);
+        Ok(())
     }
 }
