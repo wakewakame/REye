@@ -9,14 +9,12 @@ crate-type = ["cdylib"]
 
 [dependencies]
 wasm-bindgen = "0.2.70"
+js-sys = "0.3.22"
+console_error_panic_hook = "0.1.5"
 
 [profile.release]
 # Releaseビルド時に最適化を行う
 lto = true
-
-[target."cfg(debug_assertions)".dependencies]
-# Debugビルド時にpanicの詳細をconsole.errorに表示する
-console_error_panic_hook = "0.1.5"
 
 [dependencies.web-sys]
 version = "0.3.4"

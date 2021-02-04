@@ -12,10 +12,8 @@
 				const canvas = document.getElementById("canvas");
 				const context = canvas.getContext("2d");
 
+				// RootComponentの作成
 				const root_component = RootComponent.new();
-				root_component.add();
-				const a = root_component.draw(context);
-				console.log(a);
 
 				// リサイズイベントにあわせてcanvasをリサイズ
 				const resize = () => {
@@ -26,9 +24,17 @@
 					canvas_div.style.height = canvas.style.height = `${height}px`;
 					canvas.width = width * ratio;
 					canvas.height = height * ratio;
+					root_component.resize(canvas.width, canvas.height);
 				};
 				window.addEventListener("resize", resize);
 				resize();
+
+				// アニメーションループ
+				const loop = () => {
+					root_component.draw(context);
+					window.requestAnimationFrame(loop);
+				};
+				window.requestAnimationFrame(loop);
 			});
 		</script>
 	</head>
