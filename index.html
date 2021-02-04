@@ -10,10 +10,12 @@
 				// DOMの取得
 				const canvas_div= document.getElementById("canvas_div");
 				const canvas = document.getElementById("canvas");
+				const context = canvas.getContext("2d");
 
 				const root_component = RootComponent.new();
 				root_component.add();
-				console.log(root_component.get());
+				const a = root_component.draw(context);
+				console.log(a);
 
 				// リサイズイベントにあわせてcanvasをリサイズ
 				const resize = () => {

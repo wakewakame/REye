@@ -6,6 +6,13 @@ use std::panic;
 
 use wasm_bindgen::prelude::*;
 
+// println!の代わりにlog!でコンソール出力できるようにする
+macro_rules! log {
+    ( $( $t:tt )* ) => {
+        web_sys::console::log_1(&format!( $( $t )* ).into());
+    }
+}
+
 // wasmの初期化時に呼ばれる関数
 #[wasm_bindgen(start)]
 pub fn main() -> Result<(), JsValue> {
@@ -26,6 +33,10 @@ pub struct RootComponent {
 impl RootComponent {
     pub fn new() -> RootComponent {
         RootComponent { i: 0 }
+    }
+    pub fn draw(&mut self, context: web_sys::CanvasRenderingContext2d) -> web_sys::CanvasRenderingContext2d {
+		log!("{:?}", context);
+        return context;
     }
     pub fn add(&mut self) {
         self.i += 1;
