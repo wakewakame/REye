@@ -26,4 +26,6 @@ features = [
   'Node',
   'Window',
   'CanvasRenderingContext2d',
+  'Event',
+  'MouseEvent',
 ]

@@ -16,25 +16,37 @@
 				const root_component = RootComponent.new();
 
 				// リサイズイベントにあわせてcanvasをリサイズ
+				let ratio = 1;
 				const resize = () => {
 					const width = window.innerWidth;
 					const height = window.innerHeight;
-					const ratio = window.devicePixelRatio;
+					ratio = window.devicePixelRatio;
 					canvas_div.style.width = canvas.style.width = `${width}px`;
 					canvas_div.style.height = canvas.style.height = `${height}px`;
 					canvas.width = width * ratio;
 					canvas.height = height * ratio;
-					root_component.resize(canvas.width, canvas.height);
+					root_component.resize(width, height);
 				};
 				window.addEventListener("resize", resize);
 				resize();
 
 				// アニメーションループ
 				const loop = () => {
-					root_component.draw(context);
+					context.save();
+					try {
+						// canvasとRootComponentの解像度が異なるため、スケールを一致させる
+						context.scale(ratio, ratio);
+						root_component.draw(context);
+					}
+					finally {
+						context.restore();
+					}
 					window.requestAnimationFrame(loop);
 				};
 				window.requestAnimationFrame(loop);
+
+				// 一部のイベントをRootComponentに転送
+				canvas.addEventListener("mousemove", e => { root_component.dispatch_event(e); });
 			});
 		</script>
 	</head>
