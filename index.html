@@ -2,7 +2,7 @@
 	<head>
 		<meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
 		<script type="module">
-			import init, { RootComponent } from './pkg/reye.js';
+			import init, { create_root_component } from './pkg/reye.js';
 			document.addEventListener("DOMContentLoaded", async () => {
 				// wasmの初期化
 				await init();
@@ -12,8 +12,8 @@
 				const canvas = document.getElementById("canvas");
 				const context = canvas.getContext("2d");
 
-				// RootComponentの作成
-				const root_component = RootComponent.new();
+				// Rootの作成
+				const root_component = create_root_component();
 
 				// リサイズイベントにあわせてcanvasをリサイズ
 				let ratio = 1;
