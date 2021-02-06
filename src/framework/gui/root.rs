@@ -22,16 +22,27 @@ impl Mouse {
 pub struct Root {
     width: f64, height: f64,
     mouse: Mouse,
+    child: Vec<Box<dyn super::Component>>,
 }
 
-#[wasm_bindgen]
 impl Root {
     pub fn new() -> Root {
         Root {
             width: 0.0, height: 0.0,
-            mouse: Mouse::new()
+            mouse: Mouse::new(),
+            child: Vec::new()
         }
     }
+}
+
+impl super::Component for Root {
+    fn add_child(&mut self, child: Box<dyn super::Component>) {
+        self.child.push(child);
+    }
+}
+
+#[wasm_bindgen]
+impl Root {
     pub fn draw(&mut self, context2d: js_sys::Object) -> Result<(), JsValue> {
         // 引数の型チェック
         if !context2d.has_type::<web_sys::CanvasRenderingContext2d>() {
