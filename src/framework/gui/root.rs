@@ -1,6 +1,7 @@
 use crate::log;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
+use super::super::math;
 
 #[derive(Debug)]
 struct Mouse {
@@ -33,12 +34,29 @@ impl Root {
             child: Vec::new()
         }
     }
+    pub fn push(&mut self, child: Box<dyn super::Component>) {
+        self.child.push(child);
+    }
+    fn draw_child(component: &mut Box<dyn super::Component>, context2d: &web_sys::CanvasRenderingContext2d) {
+        let position = component.position();
+        context2d.save();
+        let _ = context2d.translate(position.x, position.y);
+        component.on_draw(context2d);
+        for index in 0..component.child_len() {
+            match component.child(index) {
+                Some(c) => { Self::draw_child(c, context2d); },
+                None => (),
+            }
+        }
+        context2d.restore();
+    }
 }
 
 impl super::Component for Root {
-    fn add_child(&mut self, child: Box<dyn super::Component>) {
-        self.child.push(child);
-    }
+    fn position(&self) -> math::Point2d { math::Point2d::new(0.0, 0.0) }
+    fn size(&self) -> math::Point2d { math::Point2d::new(self.width, self.height) }
+    fn child(&mut self, index: usize) -> Option<&mut Box<dyn super::Component>> { self.child.get_mut(index) }
+    fn child_len(&self) -> usize { self.child.len() }
 }
 
 #[wasm_bindgen]
@@ -50,11 +68,9 @@ impl Root {
         }
         let context2d = context2d.dyn_into::<web_sys::CanvasRenderingContext2d>()?;
 
-        // 描画
-        context2d.set_fill_style(&JsValue::from_str("#fff"));
-        context2d.fill_rect(0.0, 0.0, self.width, self.height);
-        context2d.set_fill_style(&JsValue::from_str("#f0f"));
-        context2d.fill_rect(self.mouse.x, self.mouse.y, 100.0, 100.0);
+        for c in &mut self.child {
+            Self::draw_child(c, &context2d); 
+        }
 
         Ok(())
     }
