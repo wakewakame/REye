@@ -68,6 +68,9 @@ impl Component for Main {
             _ => ()
         }
     }
+
+    fn set_position(&mut self, _: Point2d) { /*self.position = position;*/ }
+    fn set_size(&mut self, _: Point2d) { /*self.size = size;*/ }
 }
 
 #[wasm_bindgen]

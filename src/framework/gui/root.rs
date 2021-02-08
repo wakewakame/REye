@@ -9,7 +9,8 @@ use super::mouse;
 #[wasm_bindgen]
 #[derive(Debug)]
 pub struct Root {
-    // コンポーネントサイズ
+    // コンポーネントスタイル
+    position: Point2d,
     size: Point2d,
 
     // 子コンポーネント
@@ -22,6 +23,7 @@ pub struct Root {
 impl Root {
     pub fn new() -> Root {
         Root {
+            position: Point2d::new(0.0, 0.0),
             size: Point2d::new(0.0, 0.0),
             children: Vec::new(),
             drag: (Vec::new(), Vec::new(), Vec::new()),
@@ -36,6 +38,16 @@ impl Component for Root {
     fn position(&self) -> Point2d { Point2d::new(0.0, 0.0) }
     fn size(&self) -> Point2d { self.size }
     fn children_rc(&self) -> Vec<CompRc> { self.children.clone() }
+
+    fn on_update(&mut self) {
+        for child in self.children.iter() {
+            child.borrow_mut().set_position(self.position);
+            child.borrow_mut().set_size(self.size);
+        }
+    }
+
+    fn set_position(&mut self, _: Point2d) {}
+    fn set_size(&mut self, _: Point2d) {}
 }
 
 #[wasm_bindgen]
@@ -46,6 +58,7 @@ impl Root {
 			return Err(JsValue::from_str("the argument value is not instance of CanvasRenderingContext2d"));
         }
         let context2d = context2d.dyn_into::<web_sys::CanvasRenderingContext2d>()?;
+        self.update();
         self.draw(&context2d);
         Ok(())
     }

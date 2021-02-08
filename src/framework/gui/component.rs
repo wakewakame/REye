@@ -11,16 +11,29 @@ pub type Context2d = web_sys::CanvasRenderingContext2d;
 pub trait Component: std::fmt::Debug {
     // スタイル
     fn position(&self) -> Point2d { Point2d::new(0.0, 0.0) }
+    fn set_position(&mut self, position: Point2d);
     fn size(&self) -> Point2d { Point2d::new(0.0, 0.0) }
+    fn set_size(&mut self, size: Point2d);
 
     // 子コンポーネント
     fn children_rc(&self) -> Vec<CompRc>;
 
     // イベント
+    fn on_update(&mut self) {}
+    fn on_after_update(&mut self) {}
     fn on_draw(&mut self, _: &Context2d) {}
+    fn on_after_draw(&mut self, _: &Context2d) {}
     fn on_mouse(&mut self, _: mouse::Event) {}
     
     // ユーティリティ関数
+    fn update(&mut self) {
+        self.on_update();
+        let children = self.children_rc();
+        for child in children {
+            child.borrow_mut().update();
+        }
+        self.on_after_update();
+    }
     fn draw(&mut self, ctx: &Context2d) {
         ctx.save();
         let pos = self.position();
@@ -30,6 +43,7 @@ pub trait Component: std::fmt::Debug {
         for child in children {
             child.borrow_mut().draw(ctx);
         }
+        self.on_after_draw(ctx);
         ctx.restore();
     }
     fn children(&self) -> Vec<CompWeak> {
