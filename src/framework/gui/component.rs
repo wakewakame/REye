@@ -1,12 +1,38 @@
-use super::super::math;
+use std::rc::{ Rc, Weak };
+use std::cell::RefCell;
+
+use super::super::math::Point2d;
+
+pub type CompRc<T = dyn Component> = Rc<RefCell<T>>;
+pub type CompWeak<T = dyn Component> = Weak<RefCell<T>>;
+pub type Context2d = web_sys::CanvasRenderingContext2d;
 
 pub trait Component: std::fmt::Debug {
-    fn position(&self) -> math::Point2d { math::Point2d::new(0.0, 0.0) }
-    fn size(&self) -> math::Point2d { math::Point2d::new(0.0, 0.0) }
+    // スタイル
+    fn position(&self) -> Point2d { Point2d::new(0.0, 0.0) }
+    fn size(&self) -> Point2d { Point2d::new(0.0, 0.0) }
 
-    fn on_draw(&mut self, _: &web_sys::CanvasRenderingContext2d) {}
+    // 子コンポーネント
+    fn child(&self) -> Vec<CompWeak>;
+
+    // イベント
+    fn on_draw(&mut self, _: &Context2d) {}
     
-    fn is_hit(&self, position: math::Point2d) -> bool {
+    // ユーティリティ関数
+    fn draw(&mut self, ctx: &Context2d) {
+        ctx.save();
+        let pos = self.position();
+        let _ = ctx.translate(pos.x, pos.y);
+        self.on_draw(ctx);
+        let child = self.child();
+        for c in child {
+            if let Some(c) = c.upgrade() {
+                c.borrow_mut().draw(ctx);
+            }
+        }
+        ctx.restore();
+    }
+    fn is_hit(&self, position: Point2d) -> bool {
         let size = self.size();
         if position.x <= 0.0 { return false; }
         if size.x < position.x { return false; }
@@ -14,7 +40,4 @@ pub trait Component: std::fmt::Debug {
         if size.y < position.y { return false; }
         return true;
     }
-
-    fn child(&mut self, _: usize) -> Option<&mut Box<dyn Component>> { None }
-    fn child_len(&self) -> usize { 0 }
 }

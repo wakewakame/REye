@@ -36,7 +36,7 @@
 					try {
 						// canvasとRootComponentの解像度が異なるため、スケールを一致させる
 						context.scale(ratio, ratio);
-						root_component.draw(context);
+						root_component.animation(context);
 					}
 					finally {
 						context.restore();

@@ -1,8 +1,11 @@
 use wasm_bindgen::prelude::*;
+use std::rc::Rc;
+use std::cell::RefCell;
 
 mod framework;
 use framework::gui;
-use framework::math;
+use framework::math::Point2d;
+use framework::gui::{ Component, CompRc, CompWeak, Context2d };
 
 // wasmの初期化時に呼ばれる関数
 #[wasm_bindgen(start)]
@@ -15,52 +18,54 @@ pub fn main() -> Result<(), JsValue> {
 
 #[derive(Debug)]
 struct Main {
-    position: math::Point2d,
-    size: math::Point2d,
+    position: Point2d,
+    size: Point2d,
     color: String,
-    child: Vec<Box<dyn framework::gui::Component>>,
+    child: Vec<CompRc>,
 }
 impl Main {
-    fn new(x: f64, y: f64, width: f64, height: f64, color: String) -> Main {
-        Main{
-            position: math::Point2d::new(x, y),
-            size: math::Point2d::new(width, height),
+    fn create(x: f64, y: f64, width: f64, height: f64, color: String) -> CompRc<Main> {
+        let comp = Main{
+            position: Point2d::new(x, y),
+            size: Point2d::new(width, height),
             color,
             child: Vec::new(),
-        }
+        };
+        Rc::new(RefCell::new(comp))
     }
-    pub fn push(&mut self, child: Box<dyn framework::gui::Component>) {
+    fn push<T: Component + 'static>(&mut self, child: CompRc<T>) {
         self.child.push(child);
     }
 }
-impl framework::gui::Component for Main {
-    fn position(&self) -> math::Point2d { self.position }
-    fn size(&self) -> math::Point2d { self.size }
-    fn on_draw(&mut self, context2d: &web_sys::CanvasRenderingContext2d) {
+impl Component for Main {
+    fn position(&self) -> Point2d { self.position }
+    fn size(&self) -> Point2d { self.size }
+    fn on_draw(&mut self, ctx: &Context2d) {
         // 描画
         let size = self.size();
-        context2d.set_fill_style(&JsValue::from_str(self.color.as_str()));
-        context2d.fill_rect(0.0, 0.0, size.x, size.y);
+        ctx.set_fill_style(&JsValue::from_str(self.color.as_str()));
+        ctx.fill_rect(0.0, 0.0, size.x, size.y);
     }
-    fn child(&mut self, index: usize) -> Option<&mut Box<dyn framework::gui::Component>> { self.child.get_mut(index) }
-    fn child_len(&self) -> usize { self.child.len() }
+    fn child(&self) -> Vec<CompWeak> {
+        self.child.iter().map(|comp| Rc::downgrade(&comp)).collect()
+    }
 }
 
 #[wasm_bindgen]
 pub fn create_root_component() -> gui::Root {
     let mut root_component = gui::Root::new();
 
-    let mut c1 = Main::new(100.0, 100.0, 160.0, 200.0, "#F0F".into());
-    let c1_1 = Main::new(10.0, 10.0, 30.0, 30.0, "#000".into());
-    let c1_2 = Main::new(40.0, 20.0, 20.0, 30.0, "#F00".into());
+    let c1 = Main::create(100.0, 100.0, 160.0, 200.0, "#F0F".into());
+    let c1_1 = Main::create(10.0, 10.0, 30.0, 30.0, "#000".into());
+    let c1_2 = Main::create(40.0, 20.0, 20.0, 30.0, "#F00".into());
 
-    c1.push(Box::new(c1_1));
-    c1.push(Box::new(c1_2));
+    c1.borrow_mut().push(c1_1);
+    c1.borrow_mut().push(c1_2);
 
-    let c2 = Main::new(300.0, 120.0, 100.0, 100.0, "#0FF".into());
+    let c2 = Main::create(300.0, 120.0, 100.0, 100.0, "#0FF".into());
 
-    root_component.push(Box::new(c1));
-    root_component.push(Box::new(c2));
+    root_component.push(c1);
+    root_component.push(c2);
 
     return root_component;
 }
