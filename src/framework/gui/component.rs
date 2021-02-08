@@ -39,6 +39,7 @@ pub trait Component: std::fmt::Debug {
         ctx.save();
         let pos = self.position();
         let _ = ctx.translate(pos.x, pos.y);
+        ctx.begin_path();
         self.on_draw(ctx);
         let children = self.children_rc();
         for child in children {
@@ -52,11 +53,18 @@ pub trait Component: std::fmt::Debug {
     }
     fn is_hit(&self, position: Point2d) -> bool {
         let size = self.size();
-        if position.x < 0.0 { return false; }
-        if size.x <= position.x { return false; }
-        if position.y < 0.0 { return false; }
-        if size.y <= position.y { return false; }
-        return true;
+
+        if (0.0 <= position.x) && (position.x < size.x) &&
+           (0.0 <= position.y) && (position.y < size.y) { return true; } 
+        
+        for child in self.children_rc().iter() {
+            let child = child.borrow();
+            if child.is_hit(position - child.position()) {
+                return true;
+            }
+        }
+
+        return false;
     }
     fn get_hit_component(&self, position: Point2d) -> Vec<CompWeak> {
         for child in self.children_rc() {

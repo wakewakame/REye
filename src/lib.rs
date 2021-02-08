@@ -48,9 +48,6 @@ impl Component for Main {
         ctx.set_line_width(1.0);
         ctx.set_stroke_style(&JsValue::from_str("#000"));
         ctx.set_fill_style(&JsValue::from_str(self.color.as_str()));
-        if self.flag {
-            ctx.set_fill_style(&JsValue::from_str("#fff"));
-        }
         ctx.begin_path();
         ctx.rect(0.0, 0.0, size.x, size.y);
         ctx.fill();
@@ -65,6 +62,11 @@ impl Component for Main {
             mouse::Event::LeftUp(_) => {
                 self.flag = false;
             },
+            mouse::Event::Move{ global: _, local: _, movement } => {
+                if self.flag {
+                    self.position += movement;
+                }
+            }
             _ => ()
         }
     }
