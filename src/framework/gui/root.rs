@@ -153,10 +153,16 @@ impl Root {
         let event = event.dyn_into::<web_sys::KeyboardEvent>()?;
 
         // イベントの作成
+        let key = keyboard::Key {
+            key: event.key(),
+            shift: event.shift_key(),
+            ctrl: event.ctrl_key(),
+            alt: event.alt_key(),
+        };
         let event: keyboard::Event = match event.type_().as_str() {
-            "keydown"  => keyboard::Event::Down,
-            "keyup"    => keyboard::Event::Up,
-            "keypress" => keyboard::Event::Press,
+            "keydown"  => keyboard::Event::Down(key),
+            "keyup"    => keyboard::Event::Up(key),
+            "keypress" => keyboard::Event::Press(key),
             _ => keyboard::Event::Other,
         };
 
