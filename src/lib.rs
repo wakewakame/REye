@@ -5,7 +5,7 @@ use std::cell::RefCell;
 mod framework;
 use framework::gui;
 use framework::math::Point2d;
-use framework::gui::{ Component, CompRc, CompWeak, Context2d };
+use framework::gui::{ Component, CompRc, Context2d };
 
 // wasmの初期化時に呼ばれる関数
 #[wasm_bindgen(start)]
@@ -21,7 +21,7 @@ struct Main {
     position: Point2d,
     size: Point2d,
     color: String,
-    child: Vec<CompRc>,
+    children: Vec<CompRc>,
 }
 impl Main {
     fn create(x: f64, y: f64, width: f64, height: f64, color: String) -> CompRc<Main> {
@@ -29,12 +29,12 @@ impl Main {
             position: Point2d::new(x, y),
             size: Point2d::new(width, height),
             color,
-            child: Vec::new(),
+            children: Vec::new(),
         };
         Rc::new(RefCell::new(comp))
     }
     fn push<T: Component + 'static>(&mut self, child: CompRc<T>) {
-        self.child.push(child);
+        self.children.push(child);
     }
 }
 impl Component for Main {
@@ -46,9 +46,7 @@ impl Component for Main {
         ctx.set_fill_style(&JsValue::from_str(self.color.as_str()));
         ctx.fill_rect(0.0, 0.0, size.x, size.y);
     }
-    fn child(&self) -> Vec<CompWeak> {
-        self.child.iter().map(|comp| Rc::downgrade(&comp)).collect()
-    }
+    fn children_rc(&self) -> Vec<CompRc> { self.children.clone() }
 }
 
 #[wasm_bindgen]

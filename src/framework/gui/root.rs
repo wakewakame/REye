@@ -1,10 +1,9 @@
 use crate::log;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use std::rc::Rc;
 
 use super::super::math::Point2d;
-use super::{ Component, CompRc, CompWeak };
+use super::{ Component, CompRc };
 
 /*
 #[derive(Debug)]
@@ -27,27 +26,25 @@ impl Mouse {
 #[derive(Debug)]
 pub struct Root {
     size: Point2d,
-    child: Vec<CompRc>,
+    children: Vec<CompRc>,
 }
 
 impl Root {
     pub fn new() -> Root {
         Root {
             size: Point2d::new(0.0, 0.0),
-            child: Vec::new(),
+            children: Vec::new(),
         }
     }
     pub fn push(&mut self, child: CompRc) {
-        self.child.push(child);
+        self.children.push(child);
     }
 }
 
 impl Component for Root {
     fn position(&self) -> Point2d { Point2d::new(0.0, 0.0) }
     fn size(&self) -> Point2d { self.size }
-    fn child(&self) -> Vec<CompWeak> {
-        self.child.iter().map(|comp| Rc::downgrade(&comp)).collect()
-    }
+    fn children_rc(&self) -> Vec<CompRc> { self.children.clone() }
 }
 
 #[wasm_bindgen]
@@ -70,6 +67,10 @@ impl Root {
         if !event.has_type::<web_sys::MouseEvent>() {
 			return Err(JsValue::from_str("the argument value is not instance of MouseEvent"));
         }
+        let event = event.dyn_into::<web_sys::MouseEvent>()?;
+        let p = Point2d::new(event.offset_x() as f64, event.offset_y() as f64);
+        let comp = self.get_hit_component(p);
+        let _ = comp;
         //self.mouse.apply_event(event.dyn_into::<web_sys::MouseEvent>()?);
         Ok(())
     }

@@ -13,7 +13,7 @@ pub trait Component: std::fmt::Debug {
     fn size(&self) -> Point2d { Point2d::new(0.0, 0.0) }
 
     // 子コンポーネント
-    fn child(&self) -> Vec<CompWeak>;
+    fn children_rc(&self) -> Vec<CompRc>;
 
     // イベント
     fn on_draw(&mut self, _: &Context2d) {}
@@ -24,20 +24,35 @@ pub trait Component: std::fmt::Debug {
         let pos = self.position();
         let _ = ctx.translate(pos.x, pos.y);
         self.on_draw(ctx);
-        let child = self.child();
-        for c in child {
-            if let Some(c) = c.upgrade() {
-                c.borrow_mut().draw(ctx);
-            }
+        let children = self.children_rc();
+        for child in children {
+            child.borrow_mut().draw(ctx);
         }
         ctx.restore();
     }
+    fn children(&self) -> Vec<CompWeak> {
+        self.children_rc().iter().map(|comp| Rc::downgrade(comp)).collect()
+    }
     fn is_hit(&self, position: Point2d) -> bool {
         let size = self.size();
-        if position.x <= 0.0 { return false; }
-        if size.x < position.x { return false; }
-        if position.y <= 0.0 { return false; }
-        if size.y < position.y { return false; }
+        if position.x < 0.0 { return false; }
+        if size.x <= position.x { return false; }
+        if position.y < 0.0 { return false; }
+        if size.y <= position.y { return false; }
         return true;
+    }
+    fn get_hit_component(&self, position: Point2d) -> Option<CompWeak> {
+        for child in self.children_rc() {
+            let child_ref = child.borrow();
+            let position = position - child_ref.position();
+            if child_ref.is_hit(position) {
+                let comp = child_ref.get_hit_component(position);
+                match comp {
+                    Some(_) => { return comp; }
+                    None => { return Some(Rc::downgrade(&child)); }
+                }
+            }
+        } 
+        return None;
     }
 }
