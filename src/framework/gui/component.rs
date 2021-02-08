@@ -67,7 +67,12 @@ pub trait Component: std::fmt::Debug {
         return false;
     }
     fn get_hit_component(&self, position: Point2d) -> Vec<CompWeak> {
-        for child in self.children_rc() {
+        // 指定された座標の一番手前に映るコンポーネントを取得する
+        // 戻り値は当たり判定で得たコンポーネントを最初の要素として
+        // 1つずつ親コンポーネントを辿る配列を返す
+        let mut children = self.children_rc().clone();
+        children.reverse();
+        for child in children {
             let child_ref = child.borrow();
             let position = position - child_ref.position();
             if child_ref.is_hit(position) {
@@ -76,6 +81,7 @@ pub trait Component: std::fmt::Debug {
                 return comp;
             }
         } 
+
         return Vec::new();
     }
 }
