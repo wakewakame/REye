@@ -46,9 +46,10 @@
 				window.requestAnimationFrame(loop);
 
 				// 一部のイベントをRootComponentに転送
-				canvas.addEventListener("mouseup"  , e => { root_component.mouse(e); });
-				canvas.addEventListener("mousedown", e => { root_component.mouse(e); });
 				canvas.addEventListener("mousemove", e => { root_component.mouse(e); });
+				canvas.addEventListener("mousedown", e => { root_component.mouse(e); });
+				canvas.addEventListener("mouseup"  , e => { root_component.mouse(e); });
+				canvas.addEventListener("dblclick" , e => { root_component.mouse(e); });
 				canvas.addEventListener("keyup"    , e => { root_component.keyboard(e); });
 				canvas.addEventListener("keydown"  , e => { root_component.keyboard(e); });
 				canvas.addEventListener("keypress" , e => { root_component.keyboard(e); });

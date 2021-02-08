@@ -73,19 +73,21 @@ impl Root {
             alt: event.alt_key(),
         };
         
-        // どのボタンに対するイベントかの取得
-        let button = match event.which() {
-            1 => mouse::Button::Left(key),
-            2 => mouse::Button::Middle(key),
-            3 => mouse::Button::Right(key),
-            _ => mouse::Button::Other,
-        };
-
         let event: mouse::Event = match event.type_().as_str() {
             "mousemove" => mouse::Event::Move { global, local, movement },
-            "mousedown" => mouse::Event::Down(button),
-            "mouseup" => mouse::Event::Up(button),
-            "dblclick" => mouse::Event::DblClick(button),
+            "mousedown" => match event.which() {
+                1 => mouse::Event::LeftDown(key),
+                2 => mouse::Event::MiddleDown(key),
+                3 => mouse::Event::RightDown(key),
+                _ => mouse::Event::Other,
+            },
+            "mouseup" => match event.which() {
+                1 => mouse::Event::LeftUp(key),
+                2 => mouse::Event::MiddleUp(key),
+                3 => mouse::Event::RightUp(key),
+                _ => mouse::Event::Other,
+            },
+            "dblclick" => mouse::Event::DblClick(key),
             _ => mouse::Event::Other
         };
 

@@ -45,16 +45,22 @@ impl Component for Main {
     fn on_draw(&mut self, ctx: &Context2d) {
         // 描画
         let size = self.size();
+        ctx.set_line_width(1.0);
+        ctx.set_stroke_style(&JsValue::from_str("#000"));
         ctx.set_fill_style(&JsValue::from_str(self.color.as_str()));
-        ctx.fill_rect(0.0, 0.0, size.x, size.y);
+        if self.flag {
+            ctx.set_fill_style(&JsValue::from_str("#fff"));
+        }
+        ctx.begin_path();
+        ctx.rect(0.0, 0.0, size.x, size.y);
+        ctx.fill();
+        ctx.stroke();
     }
     fn children_rc(&self) -> Vec<CompRc> { self.children.clone() }
     fn on_mouse(&mut self, event: mouse::Event) {
         match event {
-            mouse::Event::Down(button) => {
-                if let mouse::Button::Left(_) = button {
-                    log!("{:?}", self.color);
-                }
+            mouse::Event::LeftDown(_) => {
+                self.flag = !self.flag;
             },
             _ => ()
         }

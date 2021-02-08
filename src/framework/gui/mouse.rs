@@ -8,19 +8,15 @@ pub struct Key {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub enum Button {
-    Left(Key),
-    Right(Key),
-    Middle(Key),
-    Other
-}
-
-#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Event {
     Move{ global: Point2d, local: Point2d, movement: Point2d },
-    Down(Button),
-    Up(Button),
-    DblClick(Button),
+    LeftDown(Key),
+    RightDown(Key),
+    MiddleDown(Key),
+    LeftUp(Key),
+    RightUp(Key),
+    MiddleUp(Key),
+    DblClick(Key),
     Wheel{ wheel: f64 },
     Other,
 }
