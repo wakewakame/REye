@@ -3,14 +3,20 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 
 use super::super::math::Point2d;
-use super::{ Component, CompRc };
+use super::{ Component, CompRc, CompWeak };
 use super::mouse;
 
 #[wasm_bindgen]
 #[derive(Debug)]
 pub struct Root {
+    // コンポーネントサイズ
     size: Point2d,
+
+    // 子コンポーネント
     children: Vec<CompRc>,
+
+    // ドラッグ中のコンポーネント(左クリック, 中央クリック, 右クリック)
+    drag: (Vec<CompWeak>, Vec<CompWeak>, Vec<CompWeak>),
 }
 
 impl Root {
@@ -18,6 +24,7 @@ impl Root {
         Root {
             size: Point2d::new(0.0, 0.0),
             children: Vec::new(),
+            drag: (Vec::new(), Vec::new(), Vec::new()),
         }
     }
     pub fn push(&mut self, child: CompRc) {
@@ -58,12 +65,30 @@ impl Root {
         let mut local = global.clone();
         let movement = Point2d::new(event.movement_x() as f64, event.movement_y() as f64);
 
-        // マウス直下のコンポーネントを取得
-        let hit_components = self.get_hit_component(local);
+        // どのボタンに対するイベントかを取得
+        let button_num = event.which();
+
+        // ドラッグ中のコンポーネントがあればそれを求める
+        let mut target_component = match button_num {
+            1 => self.drag.0.clone(),
+            2 => self.drag.1.clone(),
+            3 => self.drag.2.clone(),
+            _ => Vec::new(),
+        };
+
+        // ドラッグ中のコンポーネントがない場合はマウス直下のコンポーネントを取得
+        if target_component.is_empty() {
+            target_component = self.get_hit_component(local);
+        }
 
         // コンポーネントのローカル座標基準でのマウス座標を計算
-        for comp in hit_components.iter() {
-            local -= comp.borrow().position();
+        for comp in target_component.iter() {
+            if let Some(comp) = comp.upgrade() {
+                local -= comp.borrow().position();
+            }
+            else {
+                return Err(JsValue::from_str("failed to send mouse event"));
+            }
         }
 
         // イベントと同時に押されている特殊キーの取得
@@ -73,28 +98,36 @@ impl Root {
             alt: event.alt_key(),
         };
         
+        // イベントの作成
         let event: mouse::Event = match event.type_().as_str() {
             "mousemove" => mouse::Event::Move { global, local, movement },
-            "mousedown" => match event.which() {
-                1 => mouse::Event::LeftDown(key),
-                2 => mouse::Event::MiddleDown(key),
-                3 => mouse::Event::RightDown(key),
+            "mousedown" => match button_num {
+                1 => { self.drag.0 = target_component.clone(); mouse::Event::LeftDown(key) },
+                2 => { self.drag.1 = target_component.clone(); mouse::Event::MiddleDown(key) },
+                3 => { self.drag.2 = target_component.clone(); mouse::Event::RightDown(key) },
                 _ => mouse::Event::Other,
             },
-            "mouseup" => match event.which() {
-                1 => mouse::Event::LeftUp(key),
-                2 => mouse::Event::MiddleUp(key),
-                3 => mouse::Event::RightUp(key),
+            "mouseup" => match button_num {
+                1 => { self.drag.0 = Vec::new(); mouse::Event::LeftUp(key) },
+                2 => { self.drag.1 = Vec::new(); mouse::Event::MiddleUp(key) },
+                3 => { self.drag.2 = Vec::new(); mouse::Event::RightUp(key) },
                 _ => mouse::Event::Other,
             },
             "dblclick" => mouse::Event::DblClick(key),
             _ => mouse::Event::Other
         };
 
+        // 知らないイベントだった場合は処理を終了
         if event == mouse::Event::Other { return Ok(()); }
 
-        if let Some(comp) = hit_components.first() {
-            comp.borrow_mut().on_mouse(event);
+        // イベントを送信
+        if let Some(comp) = target_component.first() {
+            if let Some(comp) = comp.upgrade() {
+                comp.borrow_mut().on_mouse(event);
+            }
+            else {
+                return Err(JsValue::from_str("failed to send mouse event"));
+            }
         }
 
         Ok(())

@@ -60,7 +60,10 @@ impl Component for Main {
     fn on_mouse(&mut self, event: mouse::Event) {
         match event {
             mouse::Event::LeftDown(_) => {
-                self.flag = !self.flag;
+                self.flag = true;
+            },
+            mouse::Event::LeftUp(_) => {
+                self.flag = false;
             },
             _ => ()
         }

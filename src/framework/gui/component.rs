@@ -43,13 +43,13 @@ pub trait Component: std::fmt::Debug {
         if size.y <= position.y { return false; }
         return true;
     }
-    fn get_hit_component(&self, position: Point2d) -> Vec<CompRc> {
+    fn get_hit_component(&self, position: Point2d) -> Vec<CompWeak> {
         for child in self.children_rc() {
             let child_ref = child.borrow();
             let position = position - child_ref.position();
             if child_ref.is_hit(position) {
                 let mut comp = child_ref.get_hit_component(position);
-                comp.push(child.clone());
+                comp.push(Rc::downgrade(&child));
                 return comp;
             }
         } 
