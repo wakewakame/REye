@@ -5,7 +5,7 @@ use std::cell::RefCell;
 mod framework;
 use framework::gui;
 use framework::math::Point2d;
-use framework::gui::{ Component, CompRc, Context2d };
+use framework::gui::{ Component, CompRc, Context2d, mouse };
 
 // wasmの初期化時に呼ばれる関数
 #[wasm_bindgen(start)]
@@ -22,6 +22,7 @@ struct Main {
     size: Point2d,
     color: String,
     children: Vec<CompRc>,
+    flag: bool,
 }
 impl Main {
     fn create(x: f64, y: f64, width: f64, height: f64, color: String) -> CompRc<Main> {
@@ -30,6 +31,7 @@ impl Main {
             size: Point2d::new(width, height),
             color,
             children: Vec::new(),
+            flag: false,
         };
         Rc::new(RefCell::new(comp))
     }
@@ -47,6 +49,16 @@ impl Component for Main {
         ctx.fill_rect(0.0, 0.0, size.x, size.y);
     }
     fn children_rc(&self) -> Vec<CompRc> { self.children.clone() }
+    fn on_mouse(&mut self, event: mouse::Event) {
+        match event {
+            mouse::Event::Down(button) => {
+                if let mouse::Button::Left(_) = button {
+                    log!("{:?}", self.color);
+                }
+            },
+            _ => ()
+        }
+    }
 }
 
 #[wasm_bindgen]

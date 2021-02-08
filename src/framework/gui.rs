@@ -6,3 +6,5 @@ pub use component::Context2d;
 
 mod root;
 pub use root::Root;
+
+pub mod mouse;

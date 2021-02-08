@@ -2,6 +2,7 @@ use std::rc::{ Rc, Weak };
 use std::cell::RefCell;
 
 use super::super::math::Point2d;
+use super::mouse;
 
 pub type CompRc<T = dyn Component> = Rc<RefCell<T>>;
 pub type CompWeak<T = dyn Component> = Weak<RefCell<T>>;
@@ -17,6 +18,7 @@ pub trait Component: std::fmt::Debug {
 
     // イベント
     fn on_draw(&mut self, _: &Context2d) {}
+    fn on_mouse(&mut self, _: mouse::Event) {}
     
     // ユーティリティ関数
     fn draw(&mut self, ctx: &Context2d) {
@@ -41,18 +43,16 @@ pub trait Component: std::fmt::Debug {
         if size.y <= position.y { return false; }
         return true;
     }
-    fn get_hit_component(&self, position: Point2d) -> Option<CompWeak> {
+    fn get_hit_component(&self, position: Point2d) -> Vec<CompRc> {
         for child in self.children_rc() {
             let child_ref = child.borrow();
             let position = position - child_ref.position();
             if child_ref.is_hit(position) {
-                let comp = child_ref.get_hit_component(position);
-                match comp {
-                    Some(_) => { return comp; }
-                    None => { return Some(Rc::downgrade(&child)); }
-                }
+                let mut comp = child_ref.get_hit_component(position);
+                comp.push(child.clone());
+                return comp;
             }
         } 
-        return None;
+        return Vec::new();
     }
 }

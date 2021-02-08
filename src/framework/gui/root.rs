@@ -4,23 +4,7 @@ use wasm_bindgen::JsCast;
 
 use super::super::math::Point2d;
 use super::{ Component, CompRc };
-
-/*
-#[derive(Debug)]
-struct Mouse {
-    x: f64, y: f64,
-}
-
-impl Mouse {
-    fn new() -> Mouse {
-        Mouse { x: 0.0, y: 0.0 }
-    }
-    fn apply_event(&mut self, event: web_sys::MouseEvent) {
-        self.x = event.offset_x() as f64;
-        self.y = event.offset_y() as f64;
-    }
-}
-*/
+use super::mouse;
 
 #[wasm_bindgen]
 #[derive(Debug)]
@@ -68,10 +52,49 @@ impl Root {
 			return Err(JsValue::from_str("the argument value is not instance of MouseEvent"));
         }
         let event = event.dyn_into::<web_sys::MouseEvent>()?;
-        let p = Point2d::new(event.offset_x() as f64, event.offset_y() as f64);
-        let comp = self.get_hit_component(p);
-        let _ = comp;
-        //self.mouse.apply_event(event.dyn_into::<web_sys::MouseEvent>()?);
+
+        // マウス座標の取得
+        let global = Point2d::new(event.offset_x() as f64, event.offset_y() as f64);
+        let mut local = global.clone();
+        let movement = Point2d::new(event.movement_x() as f64, event.movement_y() as f64);
+
+        // マウス直下のコンポーネントを取得
+        let hit_components = self.get_hit_component(local);
+
+        // コンポーネントのローカル座標基準でのマウス座標を計算
+        for comp in hit_components.iter() {
+            local -= comp.borrow().position();
+        }
+
+        // イベントと同時に押されている特殊キーの取得
+        let key = mouse::Key {
+            shift: event.shift_key(),
+            ctrl: event.ctrl_key(),
+            alt: event.alt_key(),
+        };
+        
+        // どのボタンに対するイベントかの取得
+        let button = match event.which() {
+            1 => mouse::Button::Left(key),
+            2 => mouse::Button::Middle(key),
+            3 => mouse::Button::Right(key),
+            _ => mouse::Button::Other,
+        };
+
+        let event: mouse::Event = match event.type_().as_str() {
+            "mousemove" => mouse::Event::Move { global, local, movement },
+            "mousedown" => mouse::Event::Down(button),
+            "mouseup" => mouse::Event::Up(button),
+            "dblclick" => mouse::Event::DblClick(button),
+            _ => mouse::Event::Other
+        };
+
+        if event == mouse::Event::Other { return Ok(()); }
+
+        if let Some(comp) = hit_components.first() {
+            comp.borrow_mut().on_mouse(event);
+        }
+
         Ok(())
     }
     pub fn keyboard(&mut self, event: js_sys::Object) -> Result<(), JsValue> {
