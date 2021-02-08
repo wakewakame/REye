@@ -5,7 +5,7 @@ use std::cell::RefCell;
 mod framework;
 use framework::gui;
 use framework::math::Point2d;
-use framework::gui::{ Component, CompRc, Context2d, mouse };
+use framework::gui::{ Component, CompRc, Context2d, mouse, keyboard };
 
 // wasmの初期化時に呼ばれる関数
 #[wasm_bindgen(start)]
@@ -67,6 +67,9 @@ impl Component for Main {
             },
             _ => ()
         }
+    }
+    fn on_keyboard(&mut self, event: keyboard::Event) {
+        crate::log!("{:?}", event);
     }
 
     fn set_position(&mut self, _: Point2d) { /*self.position = position;*/ }

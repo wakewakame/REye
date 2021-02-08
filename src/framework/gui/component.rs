@@ -2,7 +2,7 @@ use std::rc::{ Rc, Weak };
 use std::cell::RefCell;
 
 use super::super::math::Point2d;
-use super::mouse;
+use super::{ mouse, keyboard };
 
 pub type CompRc<T = dyn Component> = Rc<RefCell<T>>;
 pub type CompWeak<T = dyn Component> = Weak<RefCell<T>>;
@@ -24,6 +24,7 @@ pub trait Component: std::fmt::Debug {
     fn on_draw(&mut self, _: &Context2d) {}
     fn on_after_draw(&mut self, _: &Context2d) {}
     fn on_mouse(&mut self, _: mouse::Event) {}
+    fn on_keyboard(&mut self, _: keyboard::Event) {}
     
     // ユーティリティ関数
     fn update(&mut self) {

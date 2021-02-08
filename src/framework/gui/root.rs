@@ -1,10 +1,8 @@
-use crate::log;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 
 use super::super::math::Point2d;
-use super::{ Component, CompRc, CompWeak };
-use super::mouse;
+use super::{ Component, CompRc, CompWeak, mouse, keyboard };
 
 #[wasm_bindgen]
 #[derive(Debug)]
@@ -18,6 +16,9 @@ pub struct Root {
 
     // ドラッグ中のコンポーネント(左クリック, 中央クリック, 右クリック)
     drag: (Vec<CompWeak>, Vec<CompWeak>, Vec<CompWeak>),
+
+    // キーイベントの送信先
+    key_target: Vec<CompWeak>,
 }
 
 impl Root {
@@ -27,6 +28,7 @@ impl Root {
             size: Point2d::new(0.0, 0.0),
             children: Vec::new(),
             drag: (Vec::new(), Vec::new(), Vec::new()),
+            key_target: Vec::new(),
         }
     }
     pub fn push(&mut self, child: CompRc) {
@@ -99,9 +101,6 @@ impl Root {
             if let Some(comp) = comp.upgrade() {
                 local -= comp.borrow().position();
             }
-            else {
-                return Err(JsValue::from_str("failed to send mouse event"));
-            }
         }
 
         // イベントと同時に押されている特殊キーの取得
@@ -115,7 +114,11 @@ impl Root {
         let event: mouse::Event = match event.type_().as_str() {
             "mousemove" => mouse::Event::Move { global, local, movement },
             "mousedown" => match button_num {
-                1 => { self.drag.0 = target_component.clone(); mouse::Event::LeftDown(key) },
+                1 => {
+                    self.drag.0 = target_component.clone();
+                    self.key_target = target_component.clone();
+                    mouse::Event::LeftDown(key)
+                },
                 2 => { self.drag.1 = target_component.clone(); mouse::Event::MiddleDown(key) },
                 3 => { self.drag.2 = target_component.clone(); mouse::Event::RightDown(key) },
                 _ => mouse::Event::Other,
@@ -138,9 +141,6 @@ impl Root {
             if let Some(comp) = comp.upgrade() {
                 comp.borrow_mut().on_mouse(event);
             }
-            else {
-                return Err(JsValue::from_str("failed to send mouse event"));
-            }
         }
 
         Ok(())
@@ -150,7 +150,23 @@ impl Root {
         if !event.has_type::<web_sys::KeyboardEvent>() {
 			return Err(JsValue::from_str("the argument value is not instance of KeyboardEvent"));
         }
-        log!("{:?}", event);
+        let event = event.dyn_into::<web_sys::KeyboardEvent>()?;
+
+        // イベントの作成
+        let event: keyboard::Event = match event.type_().as_str() {
+            "keydown"  => keyboard::Event::Down,
+            "keyup"    => keyboard::Event::Up,
+            "keypress" => keyboard::Event::Press,
+            _ => keyboard::Event::Other,
+        };
+
+        // イベントを送信
+        if let Some(comp) = self.key_target.first() {
+            if let Some(comp) = comp.upgrade() {
+                comp.borrow_mut().on_keyboard(event);
+            }
+        }
+
         Ok(())
     }
 }

@@ -8,3 +8,4 @@ mod root;
 pub use root::Root;
 
 pub mod mouse;
+pub mod keyboard;
